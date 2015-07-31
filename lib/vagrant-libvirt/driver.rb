@@ -59,7 +59,6 @@ module VagrantPlugins
             raise e
           end
         end
-
         domain
       end
 
@@ -68,9 +67,23 @@ module VagrantPlugins
         !domain.nil?
       end
 
-      def get_ipaddress(machine)
+      def get_domain_ipaddress(domain)
+        ip_address = nil
+        domain.wait_for(2) do
+          addresses.each_pair do |type, ip|
+            # Multiple leases are separated with a newline, return only
+            # the most recent address
+            ip_address = ip[0].split("\n").first if ip[0] != nil
+          end
+
+          ip_address != nil
+        end
+        ip_address
+      end
+
+      def get_ipaddress(mid)
         # Find the machine
-        domain = get_domain(machine.id)
+        domain = get_domain(mid)
 
         if domain.nil?
           # The machine can't be found
@@ -78,34 +91,26 @@ module VagrantPlugins
         end
 
         # Get IP address from arp table
-        ip_address = nil
         begin
-          domain.wait_for(2) do
-            addresses.each_pair do |type, ip|
-              # Multiple leases are separated with a newline, return only
-              # the most recent address
-              ip_address = ip[0].split("\n").first if ip[0] != nil
-            end
-            ip_address != nil
-          end
+          ip_address = get_domain_ipaddress(domain)
         rescue Fog::Errors::TimeoutError
-          @logger.info("Timeout at waiting for an ip address for machine %s" % machine.name)
+          @logger.debug("Timeout retrieving ip address for machine id %s" % mid)
         end
 
         if not ip_address
-          @logger.info("No arp table entry found for machine %s" % machine.name)
+          @logger.debug("No arp table entry found for machine id %s" % mid)
           return nil
         end
 
         ip_address
       end
 
-      def state(machine)
+      def state(mid)
         # may be other error states with initial retreival we can't handle
         begin
-          domain = get_domain(machine.id)
+          domain = get_domain(mid)
         rescue Libvirt::RetrieveError => e
-          @logger.debug("Machine #{machine.id} not found #{e}.")
+          @logger.debug("Machine #{mid} not found #{e}.")
           return :not_created
         end
 

@@ -39,13 +39,7 @@ module VagrantPlugins
               # If we're interrupted don't worry about waiting
               return terminate(env) if env[:interrupted]
 
-              # Wait for domain to obtain an ip address
-              domain.wait_for(2) {
-                addresses.each_pair do |type, ip|
-                  env[:ip_address] = ip[0] if ip[0] != nil
-                end
-                env[:ip_address] != nil
-              }
+              env[:ip_address] = env[:machine].provider.driver.get_domain_ipaddress(domain)
             end
           end
           @logger.info("Got IP address #{env[:ip_address]}")

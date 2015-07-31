@@ -56,7 +56,7 @@ module VagrantPlugins
         # be called from other threads of execution.
         return nil if state.id != :running
 
-        ip = driver.get_ipaddress(@machine)
+        ip = driver.get_ipaddress(@machine.id)
 
         # if can't determine the IP, just return nil and let the core
         # deal with it, similar to the docker provider
@@ -100,7 +100,7 @@ module VagrantPlugins
         state_id = :not_created if (
           !state_id && (!@machine.id || !driver.created?(@machine.id)))
         # Query the driver for the current state of the machine
-        state_id = driver.state(@machine) if @machine.id && !state_id
+        state_id = driver.state(@machine.id) if @machine.id && !state_id
         state_id = :unknown if !state_id
 
         # This is a special pseudo-state so that we don't set the
