@@ -853,6 +853,26 @@ Vagrant.configure("2") do |config|
 end
 ```
 
+## Serial Console Devices
+You can define settings to redirect output from the serial console of any VM brought up with libvirt to a file or other devices that are listening. [See libvirt documentation](https://libvirt.org/formatdomain.html#elementCharSerial).
+
+Currently only redirecting to a file is supported.
+
+* `type` - only value that has an effect is file, in the future support may be added for virtual console, pty, dev, pipe, tcp, udp, unix socket, spiceport & nmdm.
+* `source` - options pertaining to how the connection attaches to the host, contains sub-settings dependent on `type`.
+`source` options for type `file`
+  * `path` - file on host to connect to the serial port to record all output. May be created by qemu system user causing some permissions issues.
+
+```ruby
+Vagrant.configure("2") do |config|
+  config.vm.define :test do |test|
+    test.vm.provider :libvirt do |domain|
+      domain.serial :type => "file", :source => {:path => "/var/log/vm_consoles/test.log}
+    end
+  end
+end
+```
+
 ## Random number generator passthrough
 
 You can pass through `/dev/random` to your VM by configuring the domain like this:
